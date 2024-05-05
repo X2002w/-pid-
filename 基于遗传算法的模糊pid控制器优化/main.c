@@ -44,5 +44,6 @@
 
 
 int main() {
+	printf("%d", 1 + 3);
 	printf("%d",1+3);
 }
