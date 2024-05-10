@@ -51,7 +51,7 @@
 
 
 
-/*
+
 typedef struct PID {
 	float err_last;
 	float err_last_last;
@@ -59,78 +59,40 @@ typedef struct PID {
 }PID;
 
 float target_num=0;
-float actual=0;
-float pid_num[3] = {0.2,0.015,0.2};
-
+float actual = 0;
+float pid_num[3] = {0.999,0,0};
+float err ,duty;
+int index=1;
 PID num_pid;
 float pid_realize(PID* sprt,float target_num,float actual_num) {
-	float err ,duty;
+
 	err = target_num - actual_num;
-	sprt->sum_err += err;
-	duty = pid_num[0] * err +pid_num[1]*sprt->sum_err + pid_num[2] * (err - sprt->err_last);
+	printf("%f\n",err);
+	/*if (abs(err) > 200)
+	{
+		index = 0;
+	}
+	else {
+		index = 1;*/
+		sprt->sum_err += err;
+	//}
+	duty = pid_num[0] * err +index*pid_num[1]*sprt->sum_err + pid_num[2] * (err - sprt->err_last);
 	sprt->err_last = err;
+	printf("%f\n", duty);
 	actual = duty;
-	return duty;
+	return actual;
 
 }
 
 int count = 0;
 float speed=0;
 int main(vpid) {
+
 	scanf("%f",&target_num);
-	for (count = 0; count < 100; count++) {
-		speed = pid_realize(pid_num, target_num, actual);
-		printf("%.2f\n", speed);
-		count++;
-	}
-	return 0;
-}*/
+	for (count = 0; count < 1000; count++) {
+		speed = pid_realize(&num_pid, target_num, actual);
+		printf("第%d个值: %f\n",count, speed);
 
-
-struct _pid {
-	float SetSpeed; //定义设定值
-	float ActualSpeed; //定义实际值
-	float err; //定义偏差值
-	float err_last; //定义上一个偏差值
-	float Kp, Ki, Kd; //定义比例、积分、微分系数
-	float duty; 
-	float integral; //定义积分值
-}pid;
-
-void PID_init() {
-	printf("PID_init begin \n");
-	pid.SetSpeed = 0.0;
-	pid.ActualSpeed = 0.0;
-	pid.err = 0.0;
-	pid.err_last = 0.0;
-	pid.duty = 0.0;
-	pid.integral = 0.0;
-	pid.Kp = 0.2;
-	pid.Ki = 0.015;
-	pid.Kd = 0.2;
-	printf("PID_init end \n");
-}
-
-float PID_realize(float speed) {
-	pid.SetSpeed = speed;
-	pid.err = pid.SetSpeed - pid.ActualSpeed;
-	pid.integral += pid.err;
-	pid.duty = pid.Kp * pid.err + pid.Ki * pid.integral + pid.Kd * (pid.err - pid.err_last);
-	pid.err_last = pid.err;
-	pid.ActualSpeed = pid.duty * 1.0;
-	return pid.ActualSpeed;
-}
-
-
-int main() {
-	printf("System begin \n");
-	PID_init();
-	int count = 0;
-	while (count < 1000)
-	{
-		float speed = PID_realize(200.0);
-		printf("%f\n", speed);
-		count++;
 	}
 	return 0;
 }
