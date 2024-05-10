@@ -59,15 +59,15 @@ typedef struct PID {
 }PID;
 
 float target_num=0;
-float actual = 0;
-float pid_num[3] = {0.999,0,0};
+float actual = 500;
+float pid_num[3] = {0.9,0,0};
 float err ,duty;
 int index=1;
 PID num_pid;
 float pid_realize(PID* sprt,float target_num,float actual_num) {
 
 	err = target_num - actual_num;
-	printf("%f\n",err);
+	//printf("%f\n",err);
 	/*if (abs(err) > 200)
 	{
 		index = 0;
@@ -78,7 +78,7 @@ float pid_realize(PID* sprt,float target_num,float actual_num) {
 	//}
 	duty = pid_num[0] * err +index*pid_num[1]*sprt->sum_err + pid_num[2] * (err - sprt->err_last);
 	sprt->err_last = err;
-	printf("%f\n", duty);
+//	printf("%f\n", duty);
 	actual = duty;
 	return actual;
 
@@ -86,7 +86,190 @@ float pid_realize(PID* sprt,float target_num,float actual_num) {
 
 int count = 0;
 float speed=0;
-int main(vpid) {
+
+
+
+
+/**********************模糊pid******************/
+
+//此模型误差指计算过程的误差，且此模型与初始条件无关，关注过程及达到稳态（目标值）的结果，其中的误差、
+// ，误差变化率，随误差变化的pid参数即为模糊理论与遗传算法所优化部分
+
+/*
+* 模糊控制器流程
+* 确定模糊控制器结构：
+	+定义模糊控制器的输入和输出变量，并确定它们的模糊集数量。
+	为每个模糊集定义隶属度函数（membership functions）。
+	设计模糊控制规则，这些规则定义了如何从输入变量的模糊集映射到输出变量的模糊集。
+
+1. 模糊化
+
+2. 模糊推理
+
+3. 去模糊化
+*/
+float det_Kp;
+float det_Ki;
+float det_Kd;                    //12, 1, 28,180  MAX16  顺
+int Turn_Ctl_fuzzy(int point)
+{
+  float turn_err,turn_det;
+  static float turn_err_last;
+  int turn;
+
+  turn_err=point-93;
+  turn_det=turn_err-turn_err_last;
+  turn_err_last=turn_err;
+
+
+//  turn_err=-14.5;
+  turn_det=-3;
+
+  int i,j;
+  /**********隶属度*******/
+  int NB=-6;
+  int NM=-4;
+  int NS=-2;
+  int ZO=0;
+  int PS=2;
+  int PM=4;
+  int PB=6;
+
+
+
+
+//  float  eRule[13]={-6.0,-5.0,-4.0,-3.0,-2.0,-1.0,0.0,1.0,2.0,3.0,4.0,5.0,6.0};   //误差E的模糊论域
+//  float  ecRule[7]={-3.0,-2.0,-1.0,0.0,1.0,2.0,3.0}; //误差变化率EC的模糊论域
+
+  float e=turn_err;
+  float ec=turn_det;
+  float es[7];
+  float ecs[7];
+
+  float menbKp;
+  float menbKi;
+  float menbKd;
+
+  float formKp[7][7],formKi[7][7],formKd[7][7];                  //(表7X7)（隶属度表）
+  float sumKp = 0;                         //采用重心法进行解模糊,sum为分母
+  float sumKi = 0;
+  float sumKd = 0;
+  //模糊规则表
+  float FuzzyRuleKp[7][7] = {{PB,PB,PM,PM,PS,ZO,ZO},
+                              {PB,PB,PM,PS,PS,ZO,NS},
+                              {PB,PM,PM,PS,ZO,NS,NS},
+                              {PM,PM,PS,ZO,NS,NM,NM},
+                              {PS,PS,ZO,NS,NS,NM,NB},
+                              {PS,ZO,NS,NM,NM,NM,NB},
+                              {ZO,ZO,NM,NM,NM,NB,NB}};
+
+  /******************计算det_Kp*****************/
+
+  //将偏差从基本论域转换到相应的模糊集论域
+  if(turn_err>=0)
+  {
+    e=turn_err/(93-2)*3;
+  }
+  else
+  {
+    e=turn_err/(184-93)*3;
+  }
+  //偏差变化率从基本论域转换到相应的模糊集论域
+  //turn_det_show=turn_det;
+  ec=turn_det/20*3;
+  /********隶属度计算********************/
+  es[NB] = ufl(e, -3, -1);                       //输入1：偏差E
+  es[NM] = uf(e, -3, -2, 0);
+  es[NS] = uf(e, -3, -1, 1);
+  es[ZO] = uf(e, -2, 0, 2);
+  es[PS] = uf(e, -1, 1, 3);
+  es[PM] = uf(e, 0, 2, 3);
+  es[PB] = ufr(e, 1, 3);
+
+  ecs[NB] = ufl(ec, -3, -1);                    //输入2：偏差变化率Ec
+  ecs[NM] = uf(ec, -3, -2, 0);
+  ecs[NS] = uf(ec, -3, -1, 1);
+  ecs[ZO] = uf(ec, -2, 0, 2);
+  ecs[PS] = uf(ec, -1, 1, 3);
+  ecs[PM] = uf(ec, 0, 2, 3);
+  ecs[PB] = ufr(ec, 1, 3);
+  /******模糊推理 规则的可信度通过取小运算得到*****/
+  for (i = 0; i < 7; i++)
+  {
+      float w,h,r;
+      for (j = 0; j < 7; j++)
+      {
+          h = es[i];
+          r = ecs[j];
+          w = fand(h, r);
+          formKp[i][j] = w;
+          sumKp += w;
+       }
+  }
+  /***************************解模糊采用重心法，以下即求分子**********************************/
+    for (i = 0; i < 7; i++)
+    {
+        for (j = 0; j < 7; j++)
+        {
+            if (FuzzyRuleKp[i][j] == NB) {menbKp += (formKp[i][j] * cufl(formKp[i][j], -6, -2));}
+            else if(FuzzyRuleKp[i][j] == NM) {menbKp += (formKp[i][j] * cuf(formKp[i][j], -6, -4, 0));}
+            else if(FuzzyRuleKp[i][j] == NS) {menbKp += (formKp[i][j] * cuf(formKp[i][j], -6, -2, 2));}
+            else if(FuzzyRuleKp[i][j] == ZO) {menbKp += (formKp[i][j] * cuf(formKp[i][j], -4, 0, 4));}
+            else if(FuzzyRuleKp[i][j] == PS) {menbKp += (formKp[i][j] * cuf(formKp[i][j], -2, 2, 6));}
+            else if(FuzzyRuleKp[i][j] == PM) {menbKp += (formKp[i][j] * cuf(formKp[i][j], 0, 4, 6));}
+            else if(FuzzyRuleKp[i][j] == PB) {menbKp += (formKp[i][j] * cufr(formKp[i][j], 2, 6));}
+        }
+    }
+    det_Kp = (menbKp / sumKp);
+
+
+    float FuzzyRuleKd[7][7] = {{PS,NS,NB,NB,NB,NM,PS},
+                              {PS,NS,NB,NM,NM,NS,ZO},
+                              {ZO,NS,NM,NM,NS,NS,ZO},
+                              {ZO,ZO,NS,NS,NS,NS,ZO},
+                              {ZO,ZO,ZO,ZO,ZO,ZO,ZO},
+                              {PB,NS,PS,PS,PS,PS,PB},
+                              {PB,PM,PM,PM,PS,PS,PB}};
+/******模糊推理 规则的可信度通过取小运算得到*****/
+    for (i = 0; i < 7; i++)
+    {
+        float w,h,r;
+        for (j = 0; j < 7; j++)
+        {
+            h = es[i];
+            r = ecs[j];
+            w = fand(h, r);
+            formKd[i][j] = w;
+        sumKd += w;
+         }
+    }
+/***************************解模糊采用重心法，以下即求分子**********************************/
+    for (i = 0; i < 7; i++)
+    {
+        for (j = 0; j < 7; j++)
+            {
+                    if (FuzzyRuleKd[i][j] == NB) {menbKd += (formKd[i][j] * cufl(formKd[i][j], -6, -2));}
+                    else if(FuzzyRuleKd[i][j] == NM) {menbKd += (formKd[i][j] * cuf(formKd[i][j], -6, -4, 0));}
+                    else if(FuzzyRuleKd[i][j] == NS) {menbKd += (formKd[i][j] * cuf(formKd[i][j], -6, -2, 2));}
+                    else if(FuzzyRuleKd[i][j] == ZO) {menbKd += (formKd[i][j] * cuf(formKd[i][j], -4, 0, 4));}
+                    else if(FuzzyRuleKd[i][j] == PS) {menbKd += (formKd[i][j] * cuf(formKd[i][j], -2, 2, 6));}
+                    else if(FuzzyRuleKd[i][j] == PM) {menbKd += (formKd[i][j] * cuf(formKd[i][j], 0, 4, 6));}
+                    else if(FuzzyRuleKd[i][j] == PB) {menbKd += (formKd[i][j] * cufr(formKd[i][j], 2, 6));}
+            }
+    }
+
+    det_Kd = (menbKd / sumKd);
+
+    turn=stree_center+(int)(turn_err*(S_D5[Set][KP]+det_Kp*10.0f)+turn_det*(S_D5[Set][KD]+det_Kd*30.0f));
+
+                    if(turn>=stree_max)   turn= stree_max;
+                    if(turn<=stree_min)   turn = stree_min;
+   // turn_p_show=turn_p+det_Kp;
+   // turn_d_show=turn_d+det_Kd;
+    return turn;
+}
+
+int main(void) {
 
 	scanf("%f",&target_num);
 	for (count = 0; count < 1000; count++) {
