@@ -1,4 +1,6 @@
+#define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
+
 
 /*
 基于遗传算法的模糊控制器优化设计的详细步骤如下：
@@ -49,9 +51,86 @@
 
 
 
+/*
+typedef struct PID {
+	float err_last;
+	float err_last_last;
+	float sum_err;
+}PID;
 
+float target_num=0;
+float actual=0;
+float pid_num[3] = {0.2,0.015,0.2};
+
+PID num_pid;
+float pid_realize(PID* sprt,float target_num,float actual_num) {
+	float err ,duty;
+	err = target_num - actual_num;
+	sprt->sum_err += err;
+	duty = pid_num[0] * err +pid_num[1]*sprt->sum_err + pid_num[2] * (err - sprt->err_last);
+	sprt->err_last = err;
+	actual = duty;
+	return duty;
+
+}
+
+int count = 0;
+float speed=0;
+int main(vpid) {
+	scanf("%f",&target_num);
+	for (count = 0; count < 100; count++) {
+		speed = pid_realize(pid_num, target_num, actual);
+		printf("%.2f\n", speed);
+		count++;
+	}
+	return 0;
+}*/
+
+
+struct _pid {
+	float SetSpeed; //定义设定值
+	float ActualSpeed; //定义实际值
+	float err; //定义偏差值
+	float err_last; //定义上一个偏差值
+	float Kp, Ki, Kd; //定义比例、积分、微分系数
+	float duty; 
+	float integral; //定义积分值
+}pid;
+
+void PID_init() {
+	printf("PID_init begin \n");
+	pid.SetSpeed = 0.0;
+	pid.ActualSpeed = 0.0;
+	pid.err = 0.0;
+	pid.err_last = 0.0;
+	pid.duty = 0.0;
+	pid.integral = 0.0;
+	pid.Kp = 0.2;
+	pid.Ki = 0.015;
+	pid.Kd = 0.2;
+	printf("PID_init end \n");
+}
+
+float PID_realize(float speed) {
+	pid.SetSpeed = speed;
+	pid.err = pid.SetSpeed - pid.ActualSpeed;
+	pid.integral += pid.err;
+	pid.duty = pid.Kp * pid.err + pid.Ki * pid.integral + pid.Kd * (pid.err - pid.err_last);
+	pid.err_last = pid.err;
+	pid.ActualSpeed = pid.duty * 1.0;
+	return pid.ActualSpeed;
+}
 
 
 int main() {
+	printf("System begin \n");
+	PID_init();
+	int count = 0;
+	while (count < 1000)
+	{
+		float speed = PID_realize(200.0);
+		printf("%f\n", speed);
+		count++;
+	}
 	return 0;
 }
