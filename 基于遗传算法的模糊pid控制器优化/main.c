@@ -112,6 +112,41 @@ float speed=0;
 
 int main() {
 
-	fuzzy_pid_init();
 
+	float target = 600;
+	float actual = 0;
+	float e_max = 600;
+	float e_min = -600;
+	float ec_max = 600;
+	float ec_min = -600;
+	float kp_max = 0;
+	float kp_min = 0;
+	float ki_max = 1;
+	float ki_min = -1;
+	float kd_max = 0;
+	float kd_min = 0;
+	float erro;
+	float erro_c;
+	float erro_pre = 0;
+	float erro_ppre = 0;
+	erro = target - actual;
+	erro_c = erro - erro_pre;
+	for (int i = 0; i < 100;i++) {
+
+		float u;
+		u = fuzzy_pid_control(e_max,e_min,ec_max,ec_min,kp_max,kp_min,erro,erro_c,
+			ki_max,ki_min,kd_max,kd_min,erro_pre,erro_ppre);
+
+		actual += u;
+		erro_ppre = erro_pre;
+		erro_pre = erro;
+		erro = target - actual;
+		erro_c = erro - erro_pre;
+		printf("i:%d         target:%f          actual:%f\n",i,target,actual);
+		printf("\n");
+		printf("\n");
+
+
+	}
+	
 }

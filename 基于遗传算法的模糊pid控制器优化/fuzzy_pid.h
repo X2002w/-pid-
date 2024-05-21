@@ -48,3 +48,10 @@ typedef struct
 void fuzzy_pid_init(void);
 
 
+
+float fuzzy_pid_control(float e_max, float e_min, float ec_max, float ec_min,
+    float kp_max, float kp_min, float erro, float erro_c,
+    float ki_max, float ki_min, float kd_max, float kd_min,
+    float erro_pre, float errp_ppre);
+
+
