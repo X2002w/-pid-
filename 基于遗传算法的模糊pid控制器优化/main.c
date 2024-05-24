@@ -110,20 +110,33 @@ float speed=0;
 3. 去模糊化
 */
 
+
+
+//传递函数，pid输出为模糊量，通过模糊函数与现实效果进行转换
+
+float transfer_fac(float s) {
+	
+	s = s*s*s/130000+s/2.89;
+	return s;
+
+}
+
+
+
 int main() {
 
 
-	float target = 600;
+	float target = 50;
 	float actual = 0;
 	float e_max = 600;
 	float e_min = -600;
 	float ec_max = 600;
 	float ec_min = -600;
-	float kp_max = 0;
+	float kp_max = 0.5;
 	float kp_min = 0;
-	float ki_max = 1;
-	float ki_min = -1;
-	float kd_max = 0;
+	float ki_max = 0.02;
+	float ki_min = 0;
+	float kd_max = 0.05;
 	float kd_min = 0;
 	float erro;
 	float erro_c;
@@ -131,13 +144,15 @@ int main() {
 	float erro_ppre = 0;
 	erro = target - actual;
 	erro_c = erro - erro_pre;
-	for (int i = 0; i < 100;i++) {
+	for (int i = 0; i < 1000;i++) {
 
-		float u;
-		u = fuzzy_pid_control(e_max,e_min,ec_max,ec_min,kp_max,kp_min,erro,erro_c,
+		float s;
+		s = fuzzy_pid_control(e_max,e_min,ec_max,ec_min,kp_max,kp_min,erro,erro_c,
 			ki_max,ki_min,kd_max,kd_min,erro_pre,erro_ppre);
 
-		actual += u;
+		
+		actual += s;//transfer_fac(s);
+
 		erro_ppre = erro_pre;
 		erro_pre = erro;
 		erro = target - actual;

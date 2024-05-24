@@ -158,11 +158,11 @@ void GetSumGrad(int Kp_rule_list[7][7], int Ki_rule_list[7][7], int Kd_rule_list
 				fuzzy_pid.KpgradSums[indexkp] = fuzzy_pid.KpgradSums[indexkp] + (fuzzy_pid.e_gradmembership[i] * fuzzy_pid.ec_gradmembership[j]);
 				fuzzy_pid.KigradSums[indexki] = fuzzy_pid.KigradSums[indexki] + (fuzzy_pid.e_gradmembership[i] * fuzzy_pid.ec_gradmembership[j]);
 				
-				printf("%d,%f\n", fuzzy_pid.e_grad_index[i], fuzzy_pid.e_gradmembership[i]);
+			/*	printf("%d,%f\n", fuzzy_pid.e_grad_index[i], fuzzy_pid.e_gradmembership[i]);
 				printf("%d,%f\n", fuzzy_pid.ec_grad_index[j], fuzzy_pid.e_gradmembership[i]);
 				printf("%f\n", fuzzy_pid.KigradSums[indexki]);
 				printf("%f\n", indexki);
-				printf("\n");
+				printf("\n");*/
 				fuzzy_pid.KdgradSums[indexkd] = fuzzy_pid.KdgradSums[indexkd] + (fuzzy_pid.e_gradmembership[i] * fuzzy_pid.ec_gradmembership[j]);
 
 			}
@@ -245,7 +245,7 @@ float fuzzy_pid_control(float e_max,float e_min,float ec_max,float ec_min,
 	fuzzy_pid.detail_kp = Inverse_quantization(kp_max, kp_min,fuzzy_pid.qdetail_kp);
 	fuzzy_pid.detail_ki = Inverse_quantization(ki_max, ki_min, fuzzy_pid.qdetail_ki);
 	fuzzy_pid.detail_kd = Inverse_quantization(kd_max, kd_min, fuzzy_pid.qdetail_kd);
-	printf("qerro_g%f        kp_g%f\n", fuzzy_pid.e_gradmembership[0], fuzzy_pid.qdetail_ki);
+//	printf("qerro_g%f        kp_g%f\n", fuzzy_pid.e_gradmembership[0], fuzzy_pid.qdetail_kp);
 	fuzzy_pid.qdetail_kp = 0;
 	fuzzy_pid.qdetail_ki = 0;
 	fuzzy_pid.qdetail_kd = 0;
@@ -253,7 +253,7 @@ float fuzzy_pid_control(float e_max,float e_min,float ec_max,float ec_min,
 	fuzzy_pid.kp = fuzzy_pid.kp + fuzzy_pid.detail_kp;
 	fuzzy_pid.ki = fuzzy_pid.ki + fuzzy_pid.detail_ki;
 	fuzzy_pid.kd = fuzzy_pid.kd + fuzzy_pid.detail_kd;
-	printf("kp:%f         dkp:%f     erro:%f       qerro:%f\n", fuzzy_pid.ki, fuzzy_pid.detail_ki,erro, fuzzy_pid.qerro);
+	//printf("kp:%f         dkp:%f     erro:%f       qerro:%f\n", fuzzy_pid.kp, fuzzy_pid.detail_kp,erro, fuzzy_pid.qerro);
 	
 	if (fuzzy_pid.kp < 0)
 		fuzzy_pid.kp = 0;
@@ -266,8 +266,8 @@ float fuzzy_pid_control(float e_max,float e_min,float ec_max,float ec_min,
 	fuzzy_pid.detail_ki = 0;
 	fuzzy_pid.detail_kd = 0;
 
-	float output = fuzzy_pid.kp * (erro - erro_pre) + fuzzy_pid.ki * erro + fuzzy_pid.kd * (erro-2*erro_pre+errp_ppre);
-	
+	float output = fuzzy_pid.kp *erro + fuzzy_pid.ki * fuzzy_pid.erro_sum + fuzzy_pid.kd * (erro-erro_pre);
+	//float output = 0.23* erro + 0.01 * fuzzy_pid.erro_sum +  0.50* (erro - erro_pre);
 	return output;
 
 }
