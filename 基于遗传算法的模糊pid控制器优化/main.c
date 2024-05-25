@@ -1,6 +1,9 @@
 #define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
 #include "fuzzy_pid.h"
+#include "GA.h"
+#include "stdlib.h"
+#include"time.h"
 
 
 /*
@@ -125,7 +128,7 @@ float transfer_fac(float s) {
 
 int main() {
 
-
+	heredity_optimize();
 	float target = 50;
 	float actual = 0;
 	float e_max = 600;
@@ -145,7 +148,7 @@ int main() {
 	erro = target - actual;
 	erro_c = erro - erro_pre;
 	for (int i = 0; i < 1000;i++) {
-
+		printf("%f", domain_max);
 		float s;
 		s = fuzzy_pid_control(e_max,e_min,ec_max,ec_min,kp_max,kp_min,erro,erro_c,
 			ki_max,ki_min,kd_max,kd_min,erro_pre,erro_ppre);

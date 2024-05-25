@@ -21,9 +21,15 @@
     <ClCompile Include="fuzzy_pid.c">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="GA.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="fuzzy_pid.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="GA.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

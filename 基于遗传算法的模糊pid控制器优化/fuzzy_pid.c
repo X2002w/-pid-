@@ -2,10 +2,23 @@
 
 //要实现模糊化首先需要对模糊化进行初始化，初始化包括论域的确定以及隶属度函数的确定。
 #include "fuzzy_pid.h"
+#include "GA.h"
 FuzzyPid fuzzy_pid;//声明模糊pid变量
 
 
-int NB = -3, NM = -2, NS = -1, ZO = 0, PS = 1, PM = 2, PB = 3; //论域隶属值
+float domain_max ;//模糊论域范围，由遗传算法优化迭代最终得到最适合的范围
+int NB, NM , NS, ZO, PS, PM , PB; //论域隶属值
+//论域隶属值初始化
+void domain_aff_init(void) {
+
+	NB = -(domain_max / 3.0f);
+	NM = -(domain_max *2.0f/3.0f);
+	NS = -(domain_max *3.0f/3.0f);
+	ZO = 0;
+	PS = domain_max / 3.0f;
+	PM = domain_max * 2.0f / 3.0f;
+	PB = domain_max * 3.0f / 3.0f;
+}
 
 
 
@@ -40,7 +53,7 @@ void fuzzy_pid_init(void) {
 
 
 //区间映射函数，映射误差，误差变化率到论域中
-//该模糊pid隶属度函数为固定三角形隶属度函数，论域固定为[-3, 3]。
+//该模糊pid隶属度函数为固定三角形隶属度函数，论域固定为[-3, 3]。[-domain_max,domain_max]
 // 后续使用遗传算法优化
 float Quantization(float maximum, float minimum, float x)
 {
@@ -50,7 +63,7 @@ float Quantization(float maximum, float minimum, float x)
 		return 0; // 或者抛出一个异常  
 	}
 	// 计算量化值  
-	float qvalues = 6.0f * (x - minimum) / (maximum - minimum) - 3.0f;
+	float qvalues = 2* domain_max * (x - minimum) / (maximum - minimum) - domain_max;
 	//论域固定为[-3, 3]，可根据条件改变6.0f，3.0f
 	return qvalues;
 }
@@ -60,14 +73,15 @@ void get_grad_membership(float erro,float erro_c) {
 
 	//计算误差隶属度
 	if (erro>fuzzy_pid.e_membership_values[0] && erro< fuzzy_pid.e_membership_values[6]) {
-
+		//模糊误差处于模糊论域中
 		for (int i = 0; i < fuzzy_pid.num_area;i++) {
-
+			//遍历模糊误差论域
 			if (erro>=fuzzy_pid.e_membership_values[i] && erro<= fuzzy_pid.e_membership_values[i+1]) {
-
+				//查看处于那个区域/论域隶属值区间
+				//并计算所处区间的隶属度
 				fuzzy_pid.e_gradmembership[0] = -(erro - fuzzy_pid.e_membership_values[i + 1]) / (fuzzy_pid.e_membership_values[i + 1] - fuzzy_pid.e_membership_values[i]);
 				fuzzy_pid.e_gradmembership[1] = 1+(erro - fuzzy_pid.e_membership_values[i + 1]) / (fuzzy_pid.e_membership_values[i + 1] - fuzzy_pid.e_membership_values[i]);
-				fuzzy_pid.e_grad_index[0] = i;
+				fuzzy_pid.e_grad_index[0] = i;//储存算得的隶属度对应的隶属值的数组索引
 				fuzzy_pid.e_grad_index[1] = i+1;
 				break;
 
@@ -149,9 +163,9 @@ void GetSumGrad(int Kp_rule_list[7][7], int Ki_rule_list[7][7], int Kd_rule_list
 
 			if (fuzzy_pid.ec_grad_index[j]!=-1) {
 				//int NB = -3, NM = -2, NS = -1, ZO = 0, PS = 1, PM = 2, PB = 3; //论域隶属值
-				int indexkp = Kp_rule_list[fuzzy_pid.e_grad_index[i]][fuzzy_pid.ec_grad_index[j]] + 3;
-				int indexki = Ki_rule_list[fuzzy_pid.e_grad_index[i]][fuzzy_pid.ec_grad_index[j]] + 3;
-				int indexkd = Kd_rule_list[fuzzy_pid.e_grad_index[i]][fuzzy_pid.ec_grad_index[j]] + 3;
+				int indexkp = Kp_rule_list[fuzzy_pid.e_grad_index[i]][fuzzy_pid.ec_grad_index[j]] *3/domain_max + 3;
+				int indexki = Ki_rule_list[fuzzy_pid.e_grad_index[i]][fuzzy_pid.ec_grad_index[j]] * 3 / domain_max + 3;
+				int indexkd = Kd_rule_list[fuzzy_pid.e_grad_index[i]][fuzzy_pid.ec_grad_index[j]] * 3 / domain_max + 3;
 				//indexKp后面用作数组的下标索引，而规则表Kp_rule_list二维数组中
 				// 有负数元素(最小-3最大3)，因此+3是让其从(-3,3)的索引变成(0,5)
 
@@ -203,6 +217,7 @@ float fuzzy_pid_control(float e_max,float e_min,float ec_max,float ec_min,
 	// 误差，误差变化率，上次误差，上上次误差，
 	//声明规则表
 	fuzzy_pid_init();
+	domain_aff_init();
 	int Kp_rule_list[7][7] = { {PB,PB,PM,PM,PS,ZO,ZO},     //kp规则表
 							{PB,PB,PM,PS,PS,ZO,NS},
 							{PM,PM,PM,PS,ZO,NS,NS},
