@@ -24,13 +24,13 @@ void binary_encoding() {
 
 void GA_init(void) {
 	for (int i = 0; i < 20;i++) {
-
+		printf("第%d个个体", i);
 		for (int j = 0; j < 9;j++) {
 
 			chromosome[i][j] = rand() % 2; //产生0~1的随机数
-		//	printf("%d", chromosome[i][j]);
+			printf("%d", chromosome[i][j]);
 		}
-	//	printf("\n");
+	//printf("\n");
 		//初始化个体的适应度初始化
 		chromosome[i][9] = adopt_value(chromosome,i);
 	}
@@ -128,23 +128,22 @@ void variation(int chromosome[20][10]) {
 	//循环比较每个个体是否会变异
 	for (int i = 0; i < 20;i++) {
 		//随机生成变异概率，与设定值相比较
-		float var_probability= (rand() % 100)/100;
+		float var_probability= (rand() % 100)/100.0f;
 		
-		if (var_probability<= var_probability_set) {
+		if (var_probability>= var_probability_set) {
 			//个体开始变异
 			int var_num = rand() % 5 + 1;//随机发生变异的位，最高为5位
-			int* new_var = (int*)malloc(sizeof(int)*var_num);
+			//int* new_var = (int*)malloc(sizeof(int)*var_num);
 			//循环遍历个体的基因位
 			for (int j = 0; j <= var_num;j++) {
 				int var_index;
 				var_index = rand() % 9;
 
-				new_var[j] = var_index;
+			//	new_var[j] = var_index;
 
 				chromosome[i][var_index] = 1 - chromosome[i][var_index];
 			}
-
-			free(new_var);
+			//free(new_var);
 		}
 	}
 }
@@ -154,8 +153,9 @@ void variation(int chromosome[20][10]) {
 void cross(int chromosome_copy[20][10], int chromosome[20][10]) {
 		//父本，母本 相同，共20对染色体，成对进行交叉 
 		
-	float n = (rand() % 100) / 100;
-	if (n > cross_probability_set) {
+	float n = (rand() % 100) / 100.0f;
+	printf("\n%f,%f\n",n,cross_probability_set);//这一代是否交叉
+	if (n < cross_probability_set) {
 		for (int i = 0; i < 10; i++) { // 20对染色体  
 			int crossPoints[2]; // 存储一对染色体的交叉点  
 
@@ -192,13 +192,21 @@ void cross(int chromosome_copy[20][10], int chromosome[20][10]) {
 			}
 		}
 	}
+	else {
+		for (int i = 0; i < 20; i++) {
+			for (int j = 0; j < 9; j++) {
+				chromosome[i][j] = chromosome_copy[i][j];
+			}
+
+		}
+	}
 
 }
 
 //查找最优解,个体数组，子代数
 void find_Optimal(int chromosome[20][10],int Offspring) {
 
-	max_chromosome[9] = 0;//最优值的适应度置为0；
+	max_chromosome[9] =0;//最优值的适应度置为0；
 	//查找每代最优
 	for (int i = 0; i < 20;i++) {
 		//比较子代适应度
@@ -210,10 +218,21 @@ void find_Optimal(int chromosome[20][10],int Offspring) {
 	}
 
 	//全局最优
+
+	printf("\n%d,%d\n", fin_max_chromosome[9], max_chromosome[9]);
+
+	if (fin_max_chromosome[9] < max_chromosome[9]) {
+		fin_max_chromosome[9] = max_chromosome[9];
+		for (int j = 0; j < 9; j++) {
+
+			fin_max_chromosome[j] = chromosome[max_chromosome[10]][j];
+		}
+	}
+/*
 	for (int i = 0; i < 20;i++) {
 		if (fin_max_chromosome[9] < chromosome[i][9]) {
 
-			fin_max_chromosome[9] = chromosome[9];//保存全局最优的适应度
+			fin_max_chromosome[9] = chromosome[i][9];//保存全局最优的适应度
 			fin_max_chromosome[10] = Offspring;//保存全局最优的子代数
 
 			//储存全局最优的二进制编码
@@ -223,10 +242,21 @@ void find_Optimal(int chromosome[20][10],int Offspring) {
 			}
 		}
 
-	}
-
+	}*/
+	int u;
+	int num;
+	int i = max_chromosome[10];
+	printf("\n第%d代最优个体为:%d", Offspring, i);
 	//输出查找结果：
+	u = chromosome[i][0] * 256 + chromosome[i][1] * 128 + chromosome[i][2] * 64 + chromosome[i][3] * 32 + chromosome[i][4] * 16
+		+ chromosome[i][5] * 8 + chromosome[i][6] * 4 + chromosome[i][7] * 2 + chromosome[i][8] * 1;
 
+	num = fin_max_chromosome[0] * 256 + fin_max_chromosome[1] * 128 + fin_max_chromosome[2] * 64 + fin_max_chromosome[3] * 32 + fin_max_chromosome[4] * 16
+		+ fin_max_chromosome[5] * 8 + fin_max_chromosome[6] * 4 + fin_max_chromosome[7] * 2 + fin_max_chromosome[8] * 1;
+	
+	printf("  最优值为: %d   适应度为:%d\n",u,1000- max_chromosome[9]);
+	printf("全局最优值为:%d,适应度为：%d\n",num, 1000-fin_max_chromosome[9]);
+	printf("\n");
 
 
 }
@@ -251,8 +281,10 @@ float adopt_value(int chromosome[20][10], int i) {
 	domain_max = chromosome[i][0]*256+ chromosome[i][1]*128+ chromosome[i][2]*64+ chromosome[i][3]*32+ chromosome[i][4]*16
 		+ chromosome[i][5]*8+ chromosome[i][6]*4+ chromosome[i][7]*2+ chromosome[i][8]*1;
 
-
-	//printf("%f\n", domain_max);
+	if (domain_max==0) {
+		domain_max = 1;
+	}
+	printf("   第%d个个人解码：%d\n",i, domain_max);
 
 	float target = 50;
 	float actual = 0;
@@ -266,7 +298,8 @@ float adopt_value(int chromosome[20][10], int i) {
 	float ki_min = 0;
 	float kd_max = 0.05;
 	float kd_min = 0;
-	int adaption = 0;
+	int adaption = 1000;
+	int adaption_num = 50;
 	
 	float erro;
 	float erro_c;
@@ -288,12 +321,16 @@ float adopt_value(int chromosome[20][10], int i) {
 		erro = target - actual;
 		erro_c = erro - erro_pre;
 
-		if (erro < adaption) {
-
+		if (erro < adaption_num ) {
+			adaption_num = erro;
 			adaption = i;
+			//printf("误差为：%f\n", erro);
+			//printf("个体的适应度为：%d\n", 1000 - adaption);
+			//printf("\n");
 		}
+		
 	}
-//	printf("%d\n", adaption);
+
 	return 1000-adaption;//将求最小值，转化为求最大值，再用于轮盘赌的进行
 }
 
@@ -311,19 +348,48 @@ void heredity_optimize(void) {
 
 		//储存选出的个体
 		for (int i = 0; i < 20;i++) {
+			//printf("第%d个个体", i);
 			for (int j = 0; j < 9;j++) {
 
 				chromosome_copy[i][j] = chromosome[choose_chromosome[i]][j];
-		//		printf("%d", chromosome[i][j]);
+				//printf("%d", chromosome_copy[i][j]);
+			//	printf("第%d个个体：%d", i,chromosome[i][j]);
 			}
 		//	printf("\n");
 
 		}
 
 		//交叉操作
-		//cross(chromosome_copy, chromosome);
+		cross(chromosome_copy, chromosome);
+
+		//储存选出的个体
+		for (int i = 0; i < 20; i++) {
+			printf("第%d个个体:", i);
+			for (int j = 0; j < 9; j++) {
+
+				//chromosome_copy[i][j] = chromosome[choose_chromosome[i]][j];
+				printf("%d", chromosome_copy[i][j]);
+				
+				//	printf("第%d个个体：%d", i,chromosome[i][j]);
+			}
+
+			printf("    ");
+			
 		//变异操作
-		//variation(chromosome);
+		variation(chromosome);
+		for (int j = 0; j < 9; j++) {
+
+			//chromosome_copy[i][j] = chromosome[choose_chromosome[i]][j];
+			//printf("%d", chromosome_copy[i][j]);
+			printf("%d", chromosome[i][j]);
+			//	printf("第%d个个体：%d", i,chromosome[i][j]);
+		}
+
+
+		printf("\n");
+
+		}
+
 
 	/*	printf("\n");
 		printf("\n");
@@ -332,7 +398,7 @@ void heredity_optimize(void) {
 		for (int i = 0; i < 20;i++) {
 			chromosome[i][9]= adopt_value(chromosome, i);
 
-	//		printf("%d",chromosome[i][9]);
+			printf("第%d个个体的适应度为：%d",i,1000-chromosome[i][9]);
 		//	printf("\n");
 		}
 		//查找最优解
@@ -342,13 +408,14 @@ void heredity_optimize(void) {
 
 	//最优解
 	float x;
-	x = fin_max_chromosome[0] * 1 + fin_max_chromosome[1] * 2 + fin_max_chromosome[2] * 4 + fin_max_chromosome[3] * 8 + fin_max_chromosome[4] * 16
-		+ fin_max_chromosome[5] * 32 + fin_max_chromosome[6] * 64 + fin_max_chromosome[7] * 128 + fin_max_chromosome[8] * 256;
+
+	x = fin_max_chromosome[0] * 256 + fin_max_chromosome[1] * 128 + fin_max_chromosome[2] * 64 + fin_max_chromosome[3] * 32 + fin_max_chromosome[4] * 16
+		+ fin_max_chromosome[5] * 8 + fin_max_chromosome[6] * 4 + fin_max_chromosome[7] * 2 + fin_max_chromosome[8] * 1;
 	domain_max = x;
 	if (domain_max <= 0) {
 		domain_max = 3;
 	}
-	printf("查找到的最优模糊论域为：%f", domain_max);
+	printf("查找到的最优模糊论域为：%d\n", domain_max);
 }
 
 

@@ -1,7 +1,7 @@
 
 
 
-extern float domain_max;//模糊论域范围，由遗传算法优化迭代最终得到最适合的范围
+extern int domain_max;//模糊论域范围，由遗传算法优化迭代最终得到最适合的范围
 typedef struct 
 {
     float kp;                       //基本kp

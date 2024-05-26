@@ -6,7 +6,7 @@
 FuzzyPid fuzzy_pid;//声明模糊pid变量
 
 
-float domain_max ;//模糊论域范围，由遗传算法优化迭代最终得到最适合的范围
+int domain_max ;//模糊论域范围，由遗传算法优化迭代最终得到最适合的范围
 int NB, NM , NS, ZO, PS, PM , PB; //论域隶属值
 //论域隶属值初始化
 void domain_aff_init(void) {

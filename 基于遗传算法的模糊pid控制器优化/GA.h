@@ -11,10 +11,10 @@
 //定义迭代次数
 #define reproduc_num   100
 //定义交叉概率
-#define cross_probability_set 0.56
+#define cross_probability_set 0.86
 
 //定义变异概率
-#define var_probability_set 0.05
+#define var_probability_set 0.16
  
 //定义种群二维数组中数组没行表示一个个体(染色体，论域范围最大值,1<x<301）
 
