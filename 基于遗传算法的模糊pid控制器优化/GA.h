@@ -25,22 +25,15 @@ int fin_max_chromosome[11];//全局最优染色体
 
 int choose_chromosome[20];
 
-
 void find_Optimal(float chromosome[20][10], int Offspring);
 void heredity_optimize(void);
 //定义基因
 
 //定义染色体（个体唯一指定），一条染色体代表问题求解的一个答案
-
 //定义种群（染色体数目），答案的集合
 
-
-
 //在种群即系列答案中择优，即遗传算法
-
-
 //适应度，即答案的合理/优良程度，用公式表达
-
 
 //选择，适应度越大，被选择的概率越高
 // 交叉，扩大答案的范围

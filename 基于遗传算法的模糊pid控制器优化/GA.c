@@ -7,21 +7,13 @@
 //随机数种子
 #define Seed  srand((unsigned)time(0));
 //模糊pid参数初始化
-
-
-
-
-
-//对论域范围取值进行二级制编码，表现型取（x=1----300）
+//对论域范围取值进行二级制编码，表现型取（x=1----512）
 //二进制编码精度=(max-min)/2^n-1,n为二进制串的0/1数
-//15位编码，精度小数点后两位
-
 void binary_encoding() {
 
 }
 
 //种群初始化（初始化最初的模糊论域范围,及初始适应度）
-
 void GA_init(void) {
 	for (int i = 0; i < 20;i++) {
 		printf("第%d个个体", i);
@@ -299,7 +291,7 @@ float adopt_value(int chromosome[20][10], int i) {
 	float kd_max = 0.05;
 	float kd_min = 0;
 	int adaption = 1000;
-	int adaption_num = 50;
+	float adaption_num = 50;
 	
 	float erro;
 	float erro_c;

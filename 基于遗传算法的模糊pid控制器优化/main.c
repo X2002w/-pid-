@@ -6,6 +6,9 @@
 #include"time.h"
 
 
+
+
+int a;//github测试
 /*
 基于遗传算法的模糊控制器优化设计的详细步骤如下：
 
@@ -61,7 +64,7 @@ typedef struct PID {
 	float err_last_last;
 	float sum_err;
 }PID;
-
+extern  FuzzyPid fuzzy_pid;//声明模糊pid变量
 float target_num=0;
 float actual = 500;
 float pid_num[3] = {0.9,0,0};
@@ -151,6 +154,7 @@ int main() {
 		float s;
 		s = fuzzy_pid_control(e_max,e_min,ec_max,ec_min,kp_max,kp_min,erro,erro_c,
 			ki_max,ki_min,kd_max,kd_min,erro_pre,erro_ppre);
+		printf("kp:%f  ki:%f  kd:%f\n", fuzzy_pid.kp, fuzzy_pid.ki, fuzzy_pid.kd);
 
 		
 		actual += s;//transfer_fac(s);
